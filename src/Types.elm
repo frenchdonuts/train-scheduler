@@ -1,25 +1,19 @@
 module Types exposing (..)
 
-{-| This module defines the Shape of some application state and and operations
-allowed on that Shape. Notice that these operations are closed aka they don't
-change the Shape.
+{-| We define here the Shape of the Application State and what Operations we
+may perform on that State. No implementation details.
 
-No implementation details.
+Notice that these Operations are closed aka they don't change the Shape.
 -}
-
-import Autocomplete.Types
--- Shape
-
+import Autocomplete.Types as Autocomplete
 
 type alias Model =
-    { startInput : Int
-    , destInput : Int
-    }
-
-
-
--- Operations
+  { startInput : Autocomplete.Model
+  , destInput : Autocomplete.Model
+  }
 
 
 type Msg
-    = NoOp
+  = NoOp
+  | StartInput Autocomplete.Msg
+  | DestInput Autocomplete.Msg
