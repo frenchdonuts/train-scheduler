@@ -13,4 +13,6 @@ root : Model -> Html Msg
 root m =
   div
     []
-    [ Html.App.map StartInput <| Autocomplete.root m.startInput ]
+    [ Html.App.map StartInput <| Autocomplete.root m.startInput
+    , Html.App.map StartInput <| Autocomplete.root m.destInput
+    ]

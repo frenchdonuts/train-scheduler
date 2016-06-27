@@ -29,7 +29,7 @@ var commonConfig = {
 
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'src/index.html',
+      template: './index.html',
       inject:   'body',
       filename: 'index.html'
     })
@@ -47,7 +47,7 @@ if ( TARGET_ENV === 'development' ) {
 
     entry: [
       'webpack-dev-server/client?http://localhost:8080',
-      path.join( __dirname, 'src/index.js' )
+      path.join( __dirname, './index.js' )
     ],
 
     devServer: {
@@ -77,7 +77,7 @@ if ( TARGET_ENV === 'development' ) {
         },
         {
             test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-            loader: "file-loader" 
+            loader: "file-loader"
         }
       ]
     }
@@ -91,7 +91,7 @@ if ( TARGET_ENV === 'production' ) {
 
   module.exports = merge( commonConfig, {
 
-    entry: path.join( __dirname, 'src/index.js' ),
+    entry: path.join( __dirname, './index.js' ),
 
     module: {
       loaders: [

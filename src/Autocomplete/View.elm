@@ -11,4 +11,4 @@ root : Model -> Html Msg
 root m =
   div
     []
-    []
+    [ text "Hello world!" ]

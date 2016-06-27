@@ -1,7 +1,7 @@
 // pull in desired CSS/SASS files
 require( './styles/materialize.css' );
 
-var Elm = require('./App');
+var Elm = require('./src/App');
 var meetupPlanner = Elm.App.fullscreen();
 
 // Autofocus when Page changes
