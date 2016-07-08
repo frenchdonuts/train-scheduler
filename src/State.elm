@@ -1,4 +1,4 @@
-module State exposing (initialModel, initialCommands, update)
+port module State exposing (initialModel, initialCommands, update, subscriptions)
 
 {- This module defines the actual implementations of Shape construction
    (initialModel) and the operations on Shape (update).
@@ -6,12 +6,15 @@ module State exposing (initialModel, initialCommands, update)
 
 import Types exposing (..)
 import Autocomplete.State as Autocomplete
+import Stop exposing (Stop)
+import Debug
 
 
 initialModel : Model
 initialModel =
-    { startInput = Autocomplete.initialModel
-    , destInput = Autocomplete.initialModel
+    { departureStop = Autocomplete.initialModel
+    , arrivalStop = Autocomplete.initialModel
+    , route = []
     }
 
 
@@ -26,16 +29,36 @@ update msg m =
         NoOp ->
             ( m, Cmd.none )
 
-        StartInput msg ->
+        DepartureInput msg ->
           ( { m
-            | startInput = Autocomplete.update msg m.startInput
+            | departureStop = Autocomplete.update msg m.departureStop
             }
           ,
           Cmd.none )
 
-        DestInput msg ->
+        ArrivalInput msg ->
           ( { m
-            | destInput = Autocomplete.update msg m.destInput
+            | arrivalStop = Autocomplete.update msg m.arrivalStop
             }
           ,
           Cmd.none )
+
+        FetchRoute stop1 stop2 ->
+          ( m, computeRoute (stop1, stop2) )
+
+        FetchRouteSucceed route ->
+          let
+            temp = Debug.log "FetchRouteSucceed" route
+          in
+            ( { m | route = route }, Cmd.none )
+
+        FetchRouteFail err ->
+          ( m, Cmd.none )
+
+
+port computeRoute : (Int, Int) -> Cmd msg
+
+port routes : (List Stop.Stop -> msg) -> Sub msg
+subscriptions : Model -> Sub Msg
+subscriptions m =
+  routes FetchRouteSucceed

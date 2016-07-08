@@ -16,11 +16,11 @@ main =
     Html.App.program
         { init =
             ( State.initialModel
-            , State.initialCommands
+            , Cmd.batch [ focusOnFirstInputAboveFold "", State.initialCommands ]
             )
         , view = View.root
         , update = State.update
-        , subscriptions = always Sub.none
+        , subscriptions = State.subscriptions
         }
 
 

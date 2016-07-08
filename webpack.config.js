@@ -4,6 +4,7 @@ var merge             = require( 'webpack-merge' );
 var HtmlWebpackPlugin = require( 'html-webpack-plugin' );
 var autoprefixer      = require( 'autoprefixer' );
 var ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
+var ServiceWorkerWepbackPlugin = require( 'serviceworker-webpack-plugin' );
 
 console.log( 'WEBPACK GO!');
 
@@ -15,7 +16,7 @@ var commonConfig = {
 
   output: {
     path:       path.resolve( __dirname, 'dist/' ),
-    filename: '[hash].js',
+    filename: '[hash].js'
   },
 
   resolve: {
@@ -32,6 +33,9 @@ var commonConfig = {
       template: './index.html',
       inject:   'body',
       filename: 'index.html'
+    }),
+    new ServiceWorkerWepbackPlugin.default({
+      entry: path.join(__dirname, 'src/js/serviceworker/sw.js'),
     })
   ],
 
@@ -39,14 +43,39 @@ var commonConfig = {
 
 }
 
+var swConfig = {
+  output: {
+    path: path.resolve( __dirname, 'dist/' ),
+    filename: 'serviceworker.js'
+  },
+
+  entry: {
+    serviceworker: path.join( __dirname, './src/js/serviceworker/sw.js' )
+  },
+
+  resolve: {
+    root: path.join( __dirname, './src/js/serviceworker')
+  },
+
+  module: {
+    loaders: [
+      {
+        test: /src\/js\/serviceworker\/.*\.js$/,
+        loader: 'babel-loader'
+      }
+    ]
+  }
+}
+
 // additional webpack settings for local env (when invoked by 'npm start')
 if ( TARGET_ENV === 'development' ) {
   console.log( 'Serving locally...');
 
-  module.exports = merge( commonConfig, {
+  module.exports = [ merge( commonConfig, {
 
     entry: [
       'webpack-dev-server/client?http://localhost:8080',
+      'babel-polyfill',
       path.join( __dirname, './index.js' )
     ],
 
@@ -61,6 +90,11 @@ if ( TARGET_ENV === 'development' ) {
           test:    /\.elm$/,
           exclude: [/elm-stuff/, /node_modules/],
           loader:  'elm-webpack'
+        },
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: 'babel-loader'
         },
         {
           test: /\.(css|scss)$/,
@@ -82,16 +116,19 @@ if ( TARGET_ENV === 'development' ) {
       ]
     }
 
-  });
+  }) ]//, swConfig ]
 }
 
 // additional webpack settings for prod env (when invoked via 'npm run build')
 if ( TARGET_ENV === 'production' ) {
   console.log( 'Building for prod...');
 
-  module.exports = merge( commonConfig, {
+  module.exports = [ merge( commonConfig, {
 
-    entry: path.join( __dirname, './index.js' ),
+    entry: [
+      'babel-polyfill',
+      path.join( __dirname, './index.js' )
+    ],
 
     module: {
       loaders: [
@@ -101,12 +138,25 @@ if ( TARGET_ENV === 'production' ) {
           loader:  'elm-webpack'
         },
         {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: 'babel-loader'
+        },
+        {
           test: /\.(css|scss)$/,
           loader: ExtractTextPlugin.extract( 'style-loader', [
             'css-loader',
             'postcss-loader',
             'sass-loader'
           ])
+        },
+        {
+            test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            loader: "url-loader?limit=10000&mimetype=application/font-woff"
+        },
+        {
+            test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            loader: "file-loader"
         }
       ]
     },
@@ -125,5 +175,5 @@ if ( TARGET_ENV === 'production' ) {
       })
     ]
 
-  });
+  }) ]//, swConfig ]
 }

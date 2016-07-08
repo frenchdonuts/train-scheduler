@@ -1,8 +1,14 @@
 module Autocomplete.Types exposing (..)
 
 type alias Model =
-  { inputText : String }
+  { selectedChoiceIndex : Int
+  , choices : List String
+  , choicesVisible : Bool
+  }
 
 
 type Msg
-  = NoOp
+  = SetUserInput String
+  | SetChoicesVisibility Bool
+  | SelectNextChoice
+  | SelectPrevChoice
