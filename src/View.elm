@@ -34,7 +34,7 @@ root m =
     cardConfig =
       { gridSpec = "col s12 m8 offset-m2" }
 
-    temp = Debug.log "List of Stops" m.route
+    temp = m.route --Debug.log "List of Stops" m.route
   in
     div
       [ class "container" ]
@@ -47,7 +47,7 @@ root m =
             [ class "row" ]
             [ a
               [ class "waves-effect waves-light btn col s12 m2 offset-m10"
-              , onClick <| FetchRoute 1234 1234
+              , onClick <| FetchRoute "70121" "70241"
               ]
               [ text "Search" ]
             ]

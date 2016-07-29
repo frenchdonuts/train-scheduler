@@ -4,14 +4,88 @@ import 'babel-polyfill'
 import runtime from 'serviceworker-webpack-plugin/lib/runtime'
 import idb from 'idb'
 //import lf from 'lovefield'
-import Lazy from 'lazy.js'
+import _ from 'lazy.js'
 // pull in desired CSS/SASS files
 import './styles/materialize.css'
 
 
 // Setup serviceWorker
 registerServiceWorker();
+/**
+var _promise = _.createWrapper(function(promise) {
+    //
+    //debugger
+    let sequence = this;
+    //debugger
+    promise.then(data => {
+        sequence.emit(data)
+    })
+});
+**/
+var promiseIterator = (promise) => {
+    let res = undefined
+    promise.then(data => res = data)
 
+    let Iterator = () => {}
+    Iterator.prototype.moveNext = () => {
+        if (res == undefined) {
+            return false
+        } else {
+            return true
+        }
+    }
+    Iterator.prototype.current = () => {
+        return res
+    }
+    return new Iterator()
+}
+var _promise = (promise) => {
+    let seq = () => { this.iterator = promiseIterator(promise) }
+
+    seq.prototype = new _.AsyncSequence()
+
+    seq.prototype.getIterator = () => {
+        return this.iterator
+    }
+
+    seq.prototype.each = () => {
+        setTimeout(() => {
+
+        })
+    }
+}
+var pauseWhile = (pred, interval) => {
+    while (pred()) {
+        setTimeout(() => {}, interval)
+    }
+}
+
+// Sequence (Promise a) -> AsyncSequence a
+_.Sequence.define("_promise", {
+  each: (fn) => {
+    return this.parent.each(function(promise, i) {
+        let res;
+        promise.then(data => { res = data })
+
+        pauseWhile(() => res == undefined, 0)
+
+        return fn(res, i);
+    });
+  }
+});
+/**
+_promise(
+    setupDB().then(db => {
+        console.log("About to db transact")
+        let tx = db.transaction('stopTimes', 'readonly')
+        let store = tx.objectStore('stopTimes')
+        let index = store.index('by-stop_id')
+
+        return index.getAll([ "70241" ])
+    })
+).map(stopTimes => { console.log(stopTimes); return stopTimes })//.flatten()
+.each(stopTime => console.log("test: " + stopTime))
+**/
 
 // Setup DB
 setupDB().then(db =>
@@ -38,22 +112,101 @@ import Elm from './src/App'
 var trainScheduler = Elm.App.fullscreen();
 
 trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
+    console.log(stationIds)
     // What happens if DB Setup hasn't finished running yet?
     // Hopefully, the query interface gives us a promise...
     // We can try queuing this query. Run at a later time.
     // Return []?
+    setupDB().then(db => {
+        console.log("About to db transact")
+        let tx = db.transaction('stopTimes', 'readonly')
+        let store = tx.objectStore('stopTimes')
+        let index = store.index('by-stop_id')
 
-    var route = [
-        { name : "Berney St"
-        , id : 1234
-        , duration : { hr : 2, min : 1, sec : 0 }
-        , departureTime : { hr : 3, min : 0, sec : 0}
-        , arrivalTime : { hr : 4, min : 30, sec : 59 }
-        }
-     ]
-    console.log("route stops: " + route.toString())
+        return index.getAll([ stationIds[0] ])
+    })
+    .then(stopTimesForDeptStation => {
+        //
+        console.log("Start of route computation")
+        _(stopTimesForDeptStation)
+            .groupBy('trip_id')
+            .keys()
+            // tripId -> Promise [StopTime]
+            .map(tripId =>
+                setupDB().then(db => {
+                    //console.log("tripId: " + tripId)
+                    let tx = db.transaction('stopTimes', 'readonly')
+                    let store = tx.objectStore('stopTimes')
+                    let index = store.index('by-trip_id')
 
-    trainScheduler.ports.routes.send(route)
+                    return index.getAll([ tripId ])
+                })
+            )
+            // Sequence (Promise [StopTime]) -> Sequence (FlattenedSequence StopTime)
+            // I want: Sequence (Promise [StopTime]) -> AsyncSequence [StopTime]
+            //  _promise(promise) :: Sequence (StreamLikeSequence [StopTime])
+            //.map(promise => _promise(promise).map(stopTimes => _(stopTimes).sortBy('stop_sequence')).flatten())
+            // The problem right now is that the "outside" Sequence is SYNCHRONOUS while the "inside" Sequence
+            //   is ASYNCHRONOUS.
+            // How can we make the outside Sequence ASYNCHRONOUS?
+            // Can we make the inside Sequence SYNCHRONOUS?
+            //   Well...if I (flatten -> groupBy -> keys), then the outside will by async while the inside
+            //     will be synchronous (arrays)
+            //   ^ Won't work. groupBy doesn't seem to work w/ asynchronous sequences
+            ._promise()
+            .tap(stopTimes => console.log(stopTimes))
+            .filter(candidateRoute => {
+                let stopIds = candidateRoute.map(stopTime => stopTime.stop_id)
+                let ans = stopIds
+                            .dropWhile(stopId => (stopId != stationIds[0] && stopId != stationIds[1]))
+                            //.tap(stopId => console.log(stopId))
+                            // Why is ans undefined even though we successfully log 70241 using tap?
+                            // B/C IT'S ASYNC!
+                            //.first()
+
+                let result;
+                ans.each(function(e) {
+                    result = e;
+                    console.log(result)
+                    return false;
+                });
+                            //.onComplete((stopId) => console.log(stopId))
+                            //.getIterator()
+                            //.moveNext()
+                            //.current()
+                console.log(result)//.moveNext())
+                // WHY DOES THIS RETURN -1 ?!? Oh...b/c it's a STREAM-LIKE SEQUENCE
+                //console.log(ans.current())
+                //console.log(stopIds.indexOf(stationIds[1]))
+                //console.log(stopIds.indexOf(stationIds[0]) < stopIds.indexOf(stationIds[1]))
+                return result == stationIds[0] //topIds.indexOf(stationIds[0]) < stopIds.indexOf(stationIds[1])
+                /**
+                console.log(candidateRoute.toArray())
+                //candidateRoute.reduce((acc, x) => {}, false)
+                for (let stopTime of candidateRoute.toArray()) {
+                    // stationIds[0] occurs before stationIds[1]
+                    if (stopTime.stop_id === stationIds[0])
+                        return true
+                    // stationIds[1] occurs before stationIds[0]
+                    else if (stopTime.stop_id === stationIds[1])
+                        return false
+                }
+                // Shouldn't happen
+                return false
+                **/
+            })
+            .map(route => {
+                console.log(route)
+                return route
+                // Trim Stops before stationIds[0]
+                // Trim Stops after stationIds[1]
+            })
+            .take(1)
+            .each(route => {
+                console.log(route)
+                //trainScheduler.ports.routes.send(route)
+            })
+    })
 });
 
 
@@ -73,6 +226,8 @@ function setupDB() {
             keyPath: ['stop_id', 'trip_id']
         })
         stopTimeStore.createIndex('trip_order', ['trip_id', 'stop_sequence'])
+        stopTimeStore.createIndex('by-trip_id', 'trip_id')
+        // Can I create an index that gives me the trip_ids given a stop_id?
     })
 }
 
@@ -90,7 +245,7 @@ function fetchAndInsertStops(db) {
                 then(response => response.text()).
                 then(text =>
                     Promise.resolve(
-                        Lazy(text).split("\n").
+                        _(text).split("\n").
                             skip(1).
                             initial().
                             map(extractValues)
@@ -120,7 +275,7 @@ function fetchAndInsertStopTimes(db) {
                 then(response => response.text()).
                 then(text =>
                     Promise.resolve(
-                        Lazy(text).split("\n").
+                        _(text).split("\n").
                             skip(1).
                             initial().
                             map(extractValues)

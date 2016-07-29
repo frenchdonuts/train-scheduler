@@ -20,6 +20,6 @@ type Msg
   = NoOp
   | DepartureInput Autocomplete.Msg
   | ArrivalInput Autocomplete.Msg
-  | FetchRoute Int Int
+  | FetchRoute String String
   | FetchRouteSucceed (List Stop.Stop)
   | FetchRouteFail Error
