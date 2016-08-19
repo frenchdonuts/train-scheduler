@@ -21,6 +21,8 @@ type alias Time =
 show : Time -> String
 show time = ( toString time.hr ) ++ ":" ++ ( toString time.min ) ++ ":" ++ ( toString time.sec )
 
+-- TODO: Make List Stop from parsing GTFS
+
 type alias Config =
   { gridSpec : String }
 

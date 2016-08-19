@@ -1,40 +1,40 @@
-module Autocomplete.State exposing (initialModel, initModelWithChoices, update)
+module Autocomplete.State exposing (initModel, update)
 
 import Autocomplete.Types exposing (..)
 
-initialModel : Model
-initialModel =
-  { selectedChoiceIndex = 0
-  , choices = [ "" ]
-  , choicesVisible = False
-  }
+initModel : Model
+initModel =
+  initModelWithDefaultInput ""
 
-initModelWithChoices : List String -> Model
-initModelWithChoices choices =
-  { initialModel | choices = initialModel.choices ++ choices }
+initModelWithDefaultInput : String -> Model
+initModelWithDefaultInput inputText =
+  { selectedChoiceIndex = 0
+  , choicesVisible = False
+  , userInput = inputText
+  }
 
 update : Msg -> Model -> Model
 update msg m =
   case msg of
-    SetUserInput string ->
-      let
-        choices' = [ string ] ++ List.drop 1 m.choices
-      in
-        { m | choices = choices' }
+    SetUserInput text ->
+      { m | userInput = text }
 
-    SetChoicesVisibility isVisible ->
-      { m | choicesVisible = isVisible }
-
-    SelectNextChoice ->
+    SelectNextChoice numChoices ->
       let
         i = m.selectedChoiceIndex + 1
-        selectedChoiceIndex' = min i ( List.length m.choices )
+        selectedChoiceIndex' = min i numChoices
       in
         { m | selectedChoiceIndex = selectedChoiceIndex' }
 
-    SelectPrevChoice ->
+    SelectPrevChoice numChoices ->
       let
         i = m.selectedChoiceIndex - 1
         selectedChoiceIndex' = max i 0
       in
         { m | selectedChoiceIndex = selectedChoiceIndex' }
+
+    HideChoices ->
+      { m | choicesVisible = False }
+
+    ShowChoices ->
+      { m | choicesVisible = True }

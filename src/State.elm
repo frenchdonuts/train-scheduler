@@ -12,8 +12,8 @@ import Debug
 
 initialModel : Model
 initialModel =
-    { departureStop = Autocomplete.initialModel
-    , arrivalStop = Autocomplete.initialModel
+    { departureStop = Autocomplete.initModel
+    , arrivalStop = Autocomplete.initModel
     , route = []
     }
 
@@ -56,7 +56,7 @@ update msg m =
           ( m, Cmd.none )
 
 
-port computeRoute : (Int, Int) -> Cmd msg
+port computeRoute : (String, String) -> Cmd msg
 
 port routes : (List Stop.Stop -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg

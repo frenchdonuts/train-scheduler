@@ -17,11 +17,16 @@ root m =
   let
     gridSpec = "col s12 m6 l6"
 
+    -- TODO: import Stop.Stops
+    stops =
+      []
+
     deptConfig =
       { label' = Just "Departure"
       , placeholder' = Nothing
       , classes = gridSpec
       , autofocus = True
+      , toString = \stop -> stop.name
       }
 
     arrivalConfig =
@@ -29,6 +34,7 @@ root m =
       , placeholder' = Nothing
       , classes = gridSpec
       , autofocus = False
+      , toString = \stop -> stop.name
       }
 
     cardConfig =
@@ -40,14 +46,14 @@ root m =
       [ class "container" ]
       [ div
           [ class "row" ]
-          [ Html.App.map DepartureInput <| Autocomplete.root deptConfig m.departureStop
-          , Html.App.map ArrivalInput <| Autocomplete.root arrivalConfig m.arrivalStop
+          [ Html.App.map DepartureInput ( Autocomplete.root deptConfig m.departureStop stops )
+          , Html.App.map ArrivalInput ( Autocomplete.root arrivalConfig m.arrivalStop stops )
           ]
         , div
             [ class "row" ]
             [ a
               [ class "waves-effect waves-light btn col s12 m2 offset-m10"
-              , onClick <| FetchRoute "70121" "70241"
+              , onClick <| FetchRoute "70241" "70121"
               ]
               [ text "Search" ]
             ]

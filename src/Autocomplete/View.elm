@@ -6,23 +6,41 @@ import Autocomplete.Types exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as Json
 
 
-type alias Config =
+type alias Config choice =
   { label' : Maybe String
   , placeholder' : Maybe String
   , classes : String  -- Make this more type-safe
   , autofocus : Bool
+  , toString : choice -> String
+  --, update : Msg -> msg
   }
 
-root : Config -> Model -> Html Msg
-root config m =
-  let
-    inputValue =
-      Maybe.withDefault "" <| List.head m.choices
+autofocus' :
+  { a
+  | label' : Maybe String
+  , placeholder' : Maybe String
+  , classes : String
+  , autofocus : Bool
+  , toString : choice -> String
+  }
+  -> { a
+     | label' : Maybe String
+     , placeholder' : Maybe String
+     , classes : String
+     , autofocus:Bool
+     , toString : choice -> String
+     }
+autofocus' config = config
 
-    choices =
-      Maybe.withDefault [] <| List.tail m.choices
+
+root : Config choice -> Model -> List choice -> Html Msg
+root config m choices =
+  let
+    numChoices =
+      List.length choices
 
     labelString =
       Maybe.withDefault "" <| config.label'
@@ -32,6 +50,26 @@ root config m =
 
     inputClass =
       if config.autofocus then "focus-field" else ""
+
+    keydownDecoder =
+      Json.customDecoder
+        keyCode
+        (\code ->
+            case code of
+              -- Arrow Down
+              40 ->
+                Ok (SelectNextChoice numChoices)
+
+              -- Arrow Up
+              38 ->
+                Ok (SelectPrevChoice numChoices)
+
+              -- Esc
+              27 -> Ok HideChoices
+
+              _ ->
+                Err "not handling that keycode"
+        )
   in
     div
       [ class <| config.classes ++ " input-field "]
@@ -39,12 +77,13 @@ root config m =
           [ id <| labelString ++ "-field"
           , class inputClass
           , type' "text"
-          , value <| inputValue
+          , value <| m.userInput
           , onInput SetUserInput
-          , onFocus ( SetChoicesVisibility True )
-          , onBlur ( SetChoicesVisibility False )
+          , onFocus ShowChoices
+          , onBlur HideChoices
           , placeholder placeholderString
           , autofocus config.autofocus
+          , on "keydown" keydownDecoder
           ]
           []
       , label
@@ -55,5 +94,5 @@ root config m =
           [ text labelString ]
       , ul
           []
-          ( List.map (\choice -> text choice) choices )
+          ( List.map (\choice -> text <| config.toString choice) choices )
       ]

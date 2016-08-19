@@ -2,8 +2,6 @@ port module App exposing (main)
 
 {-| The module that ties Type, State, and View all together.
 Interestingly, it doesn't even need to import the Type module!
-
-This is also where we define any ports to and from JS.
 -}
 
 import State as State
