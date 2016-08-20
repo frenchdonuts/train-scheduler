@@ -139,9 +139,9 @@ function setupDB() {
 
     return idb.open('gtfs', 1, upgradeDb => {
         var stopStore = upgradeDb.createObjectStore('stops', {
-            keyPath: 'stop_name'
+            keyPath: 'stop_id'
         })
-        stopStore.createIndex('stop_id', 'stop_id')
+        stopStore.createIndex('name', 'stop_name')
 
         var stopTimeStore = upgradeDb.createObjectStore('stopTimes', {
             keyPath: ['stop_id', 'trip_id']
