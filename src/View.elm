@@ -19,14 +19,14 @@ root m =
 
     -- TODO: import Stop.Stops
     stops =
-      []
+      m.stops
 
     deptConfig =
       { label' = Just "Departure"
       , placeholder' = Nothing
       , classes = gridSpec
       , autofocus = True
-      , toString = \stop -> stop.name
+      , toString = \stop -> stop.stop_name
       }
 
     arrivalConfig =
@@ -34,7 +34,7 @@ root m =
       , placeholder' = Nothing
       , classes = gridSpec
       , autofocus = False
-      , toString = \stop -> stop.name
+      , toString = \stop -> stop.stop_name
       }
 
     cardConfig =

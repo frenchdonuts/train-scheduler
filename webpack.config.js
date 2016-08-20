@@ -4,7 +4,7 @@ var merge             = require( 'webpack-merge' );
 var HtmlWebpackPlugin = require( 'html-webpack-plugin' );
 var autoprefixer      = require( 'autoprefixer' );
 var ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
-var ServiceWorkerWepbackPlugin = require( 'serviceworker-webpack-plugin' );
+var ServiceWorkerWebpackPlugin = require( 'serviceworker-webpack-plugin' );
 
 console.log( 'WEBPACK GO!');
 
@@ -34,7 +34,7 @@ var commonConfig = {
       inject:   'body',
       filename: 'index.html'
     }),
-    new ServiceWorkerWepbackPlugin.default({
+    new ServiceWorkerWebpackPlugin({
       entry: path.join(__dirname, 'src/js/serviceworker/sw.js'),
     })
   ],

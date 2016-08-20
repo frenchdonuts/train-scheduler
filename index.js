@@ -37,6 +37,21 @@ setupDB().then(db =>
 import Elm from './src/App'
 var trainScheduler = Elm.App.fullscreen();
 
+trainScheduler.ports.getStops.subscribe(function() {
+    //
+    setupDB()
+        .then(db => {
+            let tx = db.transaction(['stops'], 'readwrite')
+            let stopsStore = tx.objectStore('stops')
+            // Make sure we get the stops sorted by name
+            return stopsStore.getAll()
+        })
+        .then(stops => {
+            console.log(stops)
+            trainScheduler.ports.stops.send(stops)
+        })
+})
+
 trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
     console.log(stationIds)
     // What happens if DB Setup hasn't finished running yet?
@@ -124,9 +139,9 @@ function setupDB() {
 
     return idb.open('gtfs', 1, upgradeDb => {
         var stopStore = upgradeDb.createObjectStore('stops', {
-            keyPath: 'stop_id'
+            keyPath: 'stop_name'
         })
-        stopStore.createIndex('name', 'stop_name')
+        stopStore.createIndex('stop_id', 'stop_id')
 
         var stopTimeStore = upgradeDb.createObjectStore('stopTimes', {
             keyPath: ['stop_id', 'trip_id']

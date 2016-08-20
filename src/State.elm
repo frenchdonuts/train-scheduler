@@ -15,12 +15,14 @@ initialModel =
     { departureStop = Autocomplete.initModel
     , arrivalStop = Autocomplete.initModel
     , route = []
+    , stops = []
     }
 
 
 initialCommands : Cmd Msg
 initialCommands =
-    Cmd.batch []
+    Cmd.batch
+      [ getStops () ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -55,10 +57,23 @@ update msg m =
         FetchRouteFail err ->
           ( m, Cmd.none )
 
+        FetchStopsSucceed stops ->
+          ( { m | stops = stops }, Cmd.none )
+
+        FetchStopsFail err ->
+          ( m, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions m =
+  Sub.batch
+    [ routes FetchRouteSucceed
+    , stops FetchStopsSucceed
+    ]
 
 port computeRoute : (String, String) -> Cmd msg
 
-port routes : (List Stop.Stop -> msg) -> Sub msg
-subscriptions : Model -> Sub Msg
-subscriptions m =
-  routes FetchRouteSucceed
+port routes : (List Stop.StopTime -> msg) -> Sub msg
+
+port getStops : () -> Cmd msg
+port stops : (List Stop.Stop -> msg) -> Sub msg

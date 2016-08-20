@@ -1,13 +1,17 @@
-module Stop exposing (Stop, Time, root)
+module Stop exposing (Stop, StopTime, Time, root)
 
 import Html exposing (..)
-import Html.App
 import Html.Attributes exposing (..)
 
 
 type alias Stop =
+  { stop_id : String
+  , stop_name : String
+  }
+
+type alias StopTime =
   { name : String
-  , id : Int
+  , stop_id : Int
   , duration : Time
   , departureTime : Time
   , arrivalTime : Time
@@ -26,7 +30,8 @@ show time = ( toString time.hr ) ++ ":" ++ ( toString time.min ) ++ ":" ++ ( toS
 type alias Config =
   { gridSpec : String }
 
-root : Config -> Stop -> Html msg
+-- TODO: Move this View to a separate Card Component
+root : Config -> StopTime -> Html msg
 root config stop =
   div
     [ class config.gridSpec ]
@@ -35,12 +40,12 @@ root config stop =
         [ cardContent stop ]
     ]
 
-cardContent : Stop -> Html msg
-cardContent stop =
+cardContent : StopTime -> Html msg
+cardContent stopTime =
   div
     [ class "card-content" ]
-    [ span [ class "card-title" ] [ text stop.name ]
-    , p [] [ text <| "Dept. Time: " ++ ( show stop.departureTime ) ]
-    , p [] [ text <| "Arr. Time: " ++ ( show stop.arrivalTime ) ]
-    , p [] [ text <| "Dur: " ++ ( show stop.duration ) ]
+    [ span [ class "card-title" ] [ text stopTime.name ]
+    , p [] [ text <| "Dept. Time: " ++ ( show stopTime.departureTime ) ]
+    , p [] [ text <| "Arr. Time: " ++ ( show stopTime.arrivalTime ) ]
+    , p [] [ text <| "Dur: " ++ ( show stopTime.duration ) ]
     ]

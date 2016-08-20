@@ -12,7 +12,8 @@ import Http exposing (Error)
 type alias Model =
   { departureStop : Autocomplete.Model
   , arrivalStop : Autocomplete.Model
-  , route : List Stop.Stop
+  , route : List Stop.StopTime
+  , stops : List Stop.Stop
   }
 
 
@@ -21,5 +22,7 @@ type Msg
   | DepartureInput Autocomplete.Msg
   | ArrivalInput Autocomplete.Msg
   | FetchRoute String String
-  | FetchRouteSucceed (List Stop.Stop)
+  | FetchRouteSucceed (List Stop.StopTime)
   | FetchRouteFail Error
+  | FetchStopsSucceed (List Stop.Stop)
+  | FetchStopsFail Error
