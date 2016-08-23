@@ -7,8 +7,6 @@ const {
 let assetsToCache = [
   ...assets,
   './',
-  './gtfs/stops.txt',
-  './gtfs/stop_times.txt'
 ].map((path) => {
   return new URL(path, location).toString();
 })

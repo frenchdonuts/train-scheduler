@@ -92,7 +92,29 @@ root config m choices =
           , class "active"
           ]
           [ text labelString ]
-      , ul
-          []
-          ( List.map (\choice -> text <| config.toString choice) choices )
+      , listView m.choicesVisible <| List.map config.toString choices
       ]
+
+listView : Bool -> List String -> Html Msg
+listView visible names =
+  let
+    style' =
+      [ ( "position", "absolute" )
+      --, ( "margin-top", "-14px" )
+      , ( "z-index", "10000" )
+      ]
+
+    isHidden = not visible
+  in
+    ul
+      [ class "collection"
+      , style style'
+      , hidden isHidden
+      ]
+      ( List.map itemView names )
+
+itemView : String -> Html Msg
+itemView name =
+  li
+    [ class "collection-item" ]
+    [ text name ]

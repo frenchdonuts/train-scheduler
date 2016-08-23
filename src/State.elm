@@ -6,14 +6,17 @@ port module State exposing (initialModel, initialCommands, update, subscriptions
 
 import Types exposing (..)
 import Autocomplete.State as Autocomplete
+import Debouncer
 import Stop exposing (Stop)
 import Debug
 
 
 initialModel : Model
 initialModel =
-    { departureStop = Autocomplete.initModel
-    , arrivalStop = Autocomplete.initModel
+    { deptInput = Autocomplete.initModel
+    , deptInputDebouncer = Debouncer.init 300
+    , arrvlInput = Autocomplete.initModel
+    , arrvlInputDebouncer = Debouncer.init 300
     , route = []
     , stops = []
     }
@@ -33,17 +36,32 @@ update msg m =
 
         DepartureInput msg ->
           ( { m
-            | departureStop = Autocomplete.update msg m.departureStop
+            | deptInput = Autocomplete.update msg m.deptInput
             }
-          ,
-          Cmd.none )
+          , Cmd.none )
+
+        DeptInputDebouncer msg ->
+          let
+            ( debouncer', cmd, maybeOutMsg ) =
+              Debouncer.update msg m.deptInputDebouncer
+          in
+            ( { m | deptInputDebouncer = debouncer' }
+            , Cmd.map DeptInputDebouncer cmd )
 
         ArrivalInput msg ->
           ( { m
-            | arrivalStop = Autocomplete.update msg m.arrivalStop
+            | arrvlInput = Autocomplete.update msg m.arrvlInput
             }
           ,
-          Cmd.none )
+           Cmd.none )
+
+        ArrvlInputDebouncer msg ->
+          let
+            ( debouncer', cmd, maybeOutMsg ) =
+              Debouncer.update msg m.arrvlInputDebouncer
+          in
+            ( { m | arrvlInputDebouncer = debouncer' }
+            , Cmd.map ArrvlInputDebouncer cmd )
 
         FetchRoute stop1 stop2 ->
           ( m, computeRoute (stop1, stop2) )

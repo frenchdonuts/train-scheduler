@@ -5,7 +5,7 @@ import runtime from 'serviceworker-webpack-plugin/lib/runtime'
 import idb from 'idb'
 //import lf from 'lovefield'
 import _ from 'lazy.js'
-import Bacon from 'highland'
+import __ from 'highland'
 // pull in desired CSS/SASS files
 import './styles/materialize.css'
 
@@ -42,9 +42,9 @@ trainScheduler.ports.getStops.subscribe(function() {
     setupDB()
         .then(db => {
             let tx = db.transaction(['stops'], 'readwrite')
-            let stopsStore = tx.objectStore('stops')
+            let store = tx.objectStore('stops')
             // Make sure we get the stops sorted by name
-            return stopsStore.getAll()
+            return store.getAll()
         })
         .then(stops => {
             console.log(stops)
@@ -70,7 +70,7 @@ trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
         //
         console.log("Start of route computation")
         // :: Stream TripId
-        Bacon(
+        __(
             _(stopTimesForDeptStation)
                 .groupBy('trip_id')
                 .keys()
@@ -78,7 +78,7 @@ trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
             )
             // Stream [StopTime]
             .flatMap(tripId =>
-                Bacon(
+                __(
                     setupDB().then(db => {
                         //console.log("tripId: " + tripId)
                         let tx = db.transaction('stopTimes', 'readonly')
@@ -139,9 +139,9 @@ function setupDB() {
 
     return idb.open('gtfs', 1, upgradeDb => {
         var stopStore = upgradeDb.createObjectStore('stops', {
-            keyPath: 'stop_id'
+            keyPath: 'stop_name'
         })
-        stopStore.createIndex('name', 'stop_name')
+        stopStore.createIndex('by-stop_id', 'stop_id')
 
         var stopTimeStore = upgradeDb.createObjectStore('stopTimes', {
             keyPath: ['stop_id', 'trip_id']
