@@ -1,4 +1,4 @@
-module Debouncer exposing (Debouncer, init, Msg(Bounce), OutMsg, update)
+module Debouncer exposing (Model, init, Msg(Bounce), OutMsg(..), update)
 
 import Task
 import Process
@@ -6,13 +6,13 @@ import Time
 --import Debug
 
 
-type alias Debouncer =
+type alias Model =
   { id : Int
   , interval : Float
   --, pmsgCmd : Maybe (Cmd msg)
   }
 
-init : Float -> Debouncer
+init : Float -> Model
 init interval =
   { id = 0
   , interval = interval
@@ -28,22 +28,23 @@ type OutMsg
 
 {-| How this will work:
     We pass up a Cmd that will dispatch (Timeout newId) in interval(ms)
-    The Parent will map that (Cmd Debouncer.Msg) to (Cmd Parent.Msg) by wrapping
+    The Parent will map that (Cmd Model.Msg) to (Cmd Parent.Msg) by wrapping
      in a data constructor, DeptInputDebouncerMsg, or something
     When the Cmd is dispatched, the parent's update WILL RUN and hit the branch
-     that deals w/ DeptInputDebouncerMsg. We run Debouncer.update and that's
+     that deals w/ DeptInputDebouncerMsg. We run Model.update and that's
      how the Parent will see the OutMsg, Debounced.
     When the Parent sees that OutMsg, it will just return:
      Parent.update (Parent.Msg) Parent.Model
     Where, in our case, Parent.Msg is going to be something like FilterChoicesMsg
 -}
-update : Msg -> Debouncer -> (Debouncer, Cmd Msg, Maybe OutMsg)
+update : Msg -> Model -> (Model, Cmd Msg, Maybe OutMsg)
 update msg debouncer =
   case msg of
     Bounce ->
       let
         newId =
           debouncer.id + 1
+
         pingNewIdCmd newId =
           Process.sleep (debouncer.interval * Time.millisecond)
             |> Task.perform identity (\_ -> Timeout newId)
@@ -63,7 +64,7 @@ update msg debouncer =
         ( debouncer, Cmd.none, Nothing )
 
 {-|
-update : Msg pmsg -> Debouncer pmsg -> (Debouncer pmsg, Cmd (Msg pmsg))
+update : Msg pmsg -> Model pmsg -> (Model pmsg, Cmd (Msg pmsg))
 update msg debouncer =
   case msg of
     Bounce pmsgCmd ->

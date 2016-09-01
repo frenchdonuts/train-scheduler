@@ -1,4 +1,4 @@
-module Autocomplete.View exposing (Config, root)
+module Autocomplete.View exposing (Config, config, root)
 
 
 
@@ -9,94 +9,135 @@ import Html.Events exposing (..)
 import Json.Decode as Json
 
 
-type alias Config choice =
-  { label' : Maybe String
-  , placeholder' : Maybe String
-  , classes : String  -- Make this more type-safe
-  , autofocus : Bool
-  , toString : choice -> String
-  --, update : Msg -> msg
-  }
+type Config choice =
+  Config
+    { label' : String
+    , placeholder' : String
+    , classes : String  --TODO Make this more type-safe
+    , autofocus : Bool
+    , toString : choice -> String
+    , errMsg : String
+    , isSubmit : Bool
+    }
 
-autofocus' :
-  { a
-  | label' : Maybe String
-  , placeholder' : Maybe String
-  , classes : String
-  , autofocus : Bool
-  , toString : choice -> String
-  }
-  -> { a
-     | label' : Maybe String
-     , placeholder' : Maybe String
-     , classes : String
-     , autofocus:Bool
-     , toString : choice -> String
-     }
-autofocus' config = config
-
+config
+  : { label' : String
+    , placeholder' : String
+    , classes : String
+    , autofocus : Bool
+    , toString : choice -> String
+    , errMsg : String
+    , isSubmit : Bool
+    }
+  -> Config choice
+config { label', placeholder', classes, autofocus, toString, errMsg, isSubmit } =
+  Config
+    { label' = label'
+    , placeholder' = placeholder'
+    , classes = classes
+    , autofocus = autofocus
+    , toString = toString
+    , errMsg = errMsg
+    , isSubmit = isSubmit
+    }
 
 root : Config choice -> Model -> List choice -> Html Msg
-root config m choices =
+root (Config config) m choices =
   let
+    { label', placeholder', classes, autofocus, toString, errMsg, isSubmit } =
+      config
+
+    choicesStrings =
+      List.map toString choices
+
     numChoices =
       List.length choices
 
-    labelString =
-      Maybe.withDefault "" <| config.label'
-
-    placeholderString =
-      Maybe.withDefault "" <| config.placeholder'
-
     inputClass =
-      if config.autofocus then "focus-field" else ""
+      let
+        inputClass0 =
+          "validate "
+
+        invalid =
+          case errMsg of
+            "" -> ""
+            _  -> "invalid "
+
+        focus =
+          if autofocus then
+            "focus-field "
+          else
+            ""
+      in
+        inputClass0 ++ invalid ++ focus
 
     keydownDecoder =
       Json.customDecoder
-        keyCode
-        (\code ->
+        keyCode <|
+        \code ->
             case code of
               -- Arrow Down
               40 ->
-                Ok (SelectNextChoice numChoices)
+                Ok (SelectNextChoice choicesStrings)
 
               -- Arrow Up
               38 ->
-                Ok (SelectPrevChoice numChoices)
+                Ok (SelectPrevChoice choicesStrings)
+
+              -- Enter
+              13 ->
+                Ok SelectCurrentChoice
+
+              -- TAB
+              9 ->
+                Ok SelectCurrentChoice
 
               -- Esc
-              27 -> Ok HideChoices
+              27 ->
+                Ok HideChoices
 
               _ ->
-                Err "not handling that keycode"
-        )
+                Err "Will not handle this key code."
+
+    inputValue =
+      if m.selectedChoiceIndex > -1 then
+        case List.drop m.selectedChoiceIndex choices |> List.head of
+          Just choice -> toString choice
+
+          Nothing -> m.userInput
+      else
+        m.userInput
   in
     div
-      [ class <| config.classes ++ " input-field "]
+      [ class <| "input-field " ++ classes
+      , onFocus ShowChoices
+      , onBlur HideChoices --( SetUserChoice inputValue )
+      ]
       [ input
-          [ id <| labelString ++ "-field"
+          [ id <| label' ++ "-field"
           , class inputClass
           , type' "text"
-          , value <| m.userInput
+          , value m.currentChoice
           , onInput SetUserInput
-          , onFocus ShowChoices
-          , onBlur HideChoices
-          , placeholder placeholderString
-          , autofocus config.autofocus
+          , placeholder placeholder'
+          --, autofocus autofocus
           , on "keydown" keydownDecoder
           ]
           []
       , label
-          [ for <| labelString ++ "-field"
-          , attribute "data-error" ""
+          [ for <| label' ++ "-field"
+          , attribute "data-error" errMsg
           , class "active"
           ]
-          [ text labelString ]
-      , listView m.choicesVisible <| List.map config.toString choices
+          [ text label' ]
+      , listView
+          m.choicesVisible
+          ( List.map toString choices )
+          m.selectedChoiceIndex
       ]
 
-listView : Bool -> List String -> Html Msg
-listView visible names =
+listView : Bool -> List String -> Int -> Html Msg
+listView visible names selectedIndex =
   let
     style' =
       [ ( "position", "absolute" )
@@ -111,10 +152,32 @@ listView visible names =
       , style style'
       , hidden isHidden
       ]
-      ( List.map itemView names )
+      ( names
+          |> List.indexedMap
+              (\i name ->
+                let
+                  selected = i == selectedIndex
+                in
+                  itemView
+                    name
+                    selected
+                    (SelectChoice name i)
+                    SelectCurrentChoice
+              )
+      )
 
-itemView : String -> Html Msg
-itemView name =
-  li
-    [ class "collection-item" ]
-    [ text name ]
+itemView : String -> Bool -> Msg -> Msg -> Html Msg
+itemView name selected mouseEnterMsg clickMsg =
+  let
+    class' =
+      if selected then
+        "collection-item active"
+      else
+        "collection-item"
+  in
+    li
+      [ class class'
+      , onMouseEnter mouseEnterMsg
+      , onClick clickMsg
+      ]
+      [ text name ]
