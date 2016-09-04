@@ -125,8 +125,8 @@ trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
             } else {
                 console.log("We have a route!")
                 console.log(route)
-                trainScheduler.ports.routes.send(route)
             }
+            trainScheduler.ports.routes.send(route)
         })
     })
 });

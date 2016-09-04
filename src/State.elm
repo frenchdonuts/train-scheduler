@@ -162,8 +162,11 @@ update msg m =
                 List.map toStopCard stopTimes
 
             route =
-              zipWith1 (\s d -> [s, d]) (\s -> [s]) stopCards durationCards
-                |> List.concat
+              if (List.isEmpty stopTimes) then
+                [ Card.noRoute ]
+              else
+                zipWith1 (\s d -> [s, d]) (\s -> [s]) stopCards durationCards
+                  |> List.concat
           in
             ( { m | route = route }, Cmd.none )
 

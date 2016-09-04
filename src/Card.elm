@@ -1,4 +1,4 @@
-module Card exposing (..)
+module Card exposing (State, stop, duration, noRoute, root)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -11,6 +11,7 @@ type State
       , arrvlTime : String
       }
   | Duration String
+  | NoRoute
 
 stop :
       { name : String
@@ -28,6 +29,9 @@ stop { name, deptTime, arrvlTime } =
 duration : String -> State
 duration duration =
   Duration duration
+
+noRoute : State
+noRoute = NoRoute
 
 
 type alias Config =
@@ -52,6 +56,9 @@ card state =
     Duration duration ->
       durationCard duration
 
+    NoRoute ->
+      noRouteCard
+
 stopCard : { name:String, deptTime:String, arrvlTime:String } -> Html msg
 stopCard { name, deptTime, arrvlTime } =
   div
@@ -66,3 +73,9 @@ durationCard duration =
   div
     [ class "card-content" ]
     [ span [ class "card-title" ] [ text duration ] ]
+
+noRouteCard : Html msg
+noRouteCard =
+  div
+    [ class "card-content" ]
+    [ span [ class "card-title" ] [ text "No route available." ] ]
