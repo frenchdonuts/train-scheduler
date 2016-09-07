@@ -11,7 +11,7 @@ import Card
 import String exposing (contains)
 import Dict exposing (..)
 import Maybe
-import Utils exposing (($$>), zip, zipWith, zipWith1)
+import Utils exposing (($$>), zip, zipWith, zipWith1, lookAhead)
 import Debug
 import IntraDayTime as Time
 import Combine.Num as Num
@@ -128,14 +128,20 @@ update msg m =
 
             parse string =
               let
+                parseTwoDigitInt =
+                  Utils.lookAhead Num.digit `Combine.andThen` \d ->
+                    if (d == 0) then
+                      Combine.skip Num.digit `Combine.andThen` \_ -> Num.digit
+                    else
+                      Num.int
                 -- 10:10:00
                 parser : Combine.Parser { hr:Int, min:Int, sec:Int }
                 parser =
                   Num.int `Combine.andThen` \hr ->
                   Combine.skip Char.anyChar `Combine.andThen` \_ ->
-                  Num.int `Combine.andThen` \min ->
+                  parseTwoDigitInt `Combine.andThen` \min ->
                   Combine.skip Char.anyChar `Combine.andThen` \_ ->
-                  Num.int `Combine.andThen` \sec ->
+                  parseTwoDigitInt `Combine.andThen` \sec ->
                   Combine.succeed { hr = hr, min = min, sec = sec }
               in
                 case Combine.parse parser string of

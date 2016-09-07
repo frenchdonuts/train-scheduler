@@ -1,6 +1,7 @@
 module Utils exposing (..)
 
 import List
+import Combine exposing (Parser, app, primitive)
 
 -- Shorthand map over List-like
 (<$) : (a -> b) -> List a -> List b
@@ -88,3 +89,16 @@ isJust ma =
 
 g : List (a -> b) -> a -> List b
 g fs x = List.map ((|>) x) fs
+
+
+{- Look ahead using parser p
+-}
+lookAhead : Parser res -> Parser res
+lookAhead p =
+  Combine.primitive <| \cx ->
+    case app p cx of
+      (Ok res, _) ->
+        (Ok res, cx)
+
+      (Err m, cx') ->
+        (Err m, cx)

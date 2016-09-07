@@ -159,7 +159,7 @@ function fetchAndInsertStops(db) {
     let extractValues = line => {
         let values = line.split(",")
         return {
-            stop_id: values[0],
+            stop_id: values[1],
             stop_name: values[2]
         }
     }
@@ -176,7 +176,10 @@ function fetchAndInsertStops(db) {
                 ).then(stops => {
                     let transaction = db.transaction('stops', 'readwrite')
                     let store = transaction.objectStore('stops')
-                    stops.forEach(object => store.put(object))
+                    stops.forEach(object => {
+                        if (object.stop_id != "")
+                            store.put(object)
+                    })
                     return Promise.resolve(transaction)
                 }).then(transaction => transaction.complete)
 }
