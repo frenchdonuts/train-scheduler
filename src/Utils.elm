@@ -91,7 +91,7 @@ g : List (a -> b) -> a -> List b
 g fs x = List.map ((|>) x) fs
 
 
-{- Look ahead using parser p
+{- Look ahead using parser p, but don't consume anymore input.
 -}
 lookAhead : Parser res -> Parser res
 lookAhead p =
