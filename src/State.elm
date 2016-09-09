@@ -109,7 +109,7 @@ update msg m =
               if noErrs then
                 case (mDeptStop, mArrvlStop) of
                   (Just deptStop, Just arrvlStop) ->
-                    computeRoute (deptStop.stop_id, arrvlStop.stop_id)
+                    computeRoute (deptStop.stop_ids, arrvlStop.stop_ids)
                   _ -> Cmd.none
               else
                 Cmd.none
@@ -183,8 +183,11 @@ update msg m =
           ( { m
             | stops = stops
             , stopDict = Dict.fromList
-                          <| List.map
-                              (\stop -> (stop.stop_id, stop.stop_name))
+                          <| List.concatMap
+                              (\stop ->
+                                [ (fst stop.stop_ids, stop.stop_name)
+                                , (snd stop.stop_ids, stop.stop_name)
+                                ])
                               stops
             }, Cmd.none )
 
@@ -205,15 +208,13 @@ handleInputs cmsg input filterPred =
     filterPred' =
       case maybeOutMsg of
         Just (DebouncedAutocomplete.Debounced currentInput) ->
-          let
-            dCurrentInput = Debug.log "currentInput" currentInput
-          in
-            (\stop ->
-              String.contains
-                (String.toLower currentInput)
-                (String.toLower stop.stop_name))
+          (\stop ->
+            String.contains
+              (String.toLower currentInput)
+              (String.toLower stop.stop_name))
 
-        Nothing -> filterPred
+        Nothing ->
+          filterPred
   in
     ( arrvlInput', filterPred', cmd )
 
@@ -234,8 +235,6 @@ inputErrMsg input allStops =
 computeSelectedStop : DebouncedAutocomplete.Model -> List Stop.Stop -> Maybe Stop.Stop
 computeSelectedStop input filteredStops =
   let
-    --dFilteredStops = Debug.log "filteredStops" filteredStops
-
     mStop =
       Debug.log "mStop"
         <| Maybe.map (String.toLower << .stop_name) (List.head filteredStops)
@@ -248,6 +247,7 @@ computeSelectedStop input filteredStops =
       _ -> Nothing
 
 
+
 subscriptions : Model -> Sub Msg
 subscriptions m =
   Sub.batch
@@ -256,7 +256,7 @@ subscriptions m =
     ]
 
 -- Out
-port computeRoute : (String, String) -> Cmd msg
+port computeRoute : ( (String,String) , (String,String) ) -> Cmd msg
 -- In
 port routes : (List Stop.StopTime -> msg) -> Sub msg
 

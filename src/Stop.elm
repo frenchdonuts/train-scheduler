@@ -2,7 +2,7 @@ module Stop exposing (Stop, StopTime)
 
 
 type alias Stop =
-  { stop_id : String
+  { stop_ids : (String, String)        -- (Northbound, Southbound)
   , stop_name : String
   }
 
