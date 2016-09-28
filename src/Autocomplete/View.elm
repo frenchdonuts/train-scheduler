@@ -141,7 +141,7 @@ listView visible names selectedIndex =
   let
     style' =
       [ ( "position", "absolute" )
-      --, ( "margin-top", "-14px" )
+      , ( "margin-top", "-14px" )
       , ( "z-index", "10000" )
       ]
 

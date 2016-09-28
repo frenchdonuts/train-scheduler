@@ -12,7 +12,6 @@ import String exposing (contains)
 import Dict exposing (..)
 import Maybe
 import Utils exposing (($$>), zip, zipWith, zipWith1, lookAhead)
-import Debug
 import IntraDayTime as Time
 import Combine.Num as Num
 import Combine.Char as Char
@@ -38,7 +37,7 @@ initialModel =
 initialCommands : Cmd Msg
 initialCommands =
     Cmd.batch
-      [ getStops () ]
+      [ init () ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -59,7 +58,7 @@ update msg m =
               inputErrMsg deptInput1 m.stops
 
             selectedDeptStop =
-              Debug.log "deptStop" <| computeSelectedStop deptInput1 filteredStops
+              computeSelectedStop deptInput1 filteredStops
           in
             ( { m
               | deptInput = deptInput1
@@ -81,7 +80,7 @@ update msg m =
               inputErrMsg arrvlInput' m.stops
 
             selectedArrvlStop =
-              Debug.log "arrvlStop" <| computeSelectedStop arrvlInput' filteredStops
+              computeSelectedStop arrvlInput' filteredStops
           in
             ( { m
               | arrvlInput = arrvlInput'
@@ -94,9 +93,9 @@ update msg m =
         FetchRoute mDeptStop mArrvlStop ->
           let
             deptStop =
-              Debug.log "deptStop" m.deptStop
+              m.deptStop
             arrvlStop =
-              Debug.log "arrvlStop" m.arrvlStop
+              m.arrvlStop
 
             errSelectors =
               [ .deptInputErrMsg, .arrvlInputErrMsg ]
@@ -236,11 +235,9 @@ computeSelectedStop : DebouncedAutocomplete.Model -> List Stop.Stop -> Maybe Sto
 computeSelectedStop input filteredStops =
   let
     mStop =
-      Debug.log "mStop"
-        <| Maybe.map (String.toLower << .stop_name) (List.head filteredStops)
+      Maybe.map (String.toLower << .stop_name) (List.head filteredStops)
     mUserInput =
-      Debug.log "mUserInput"
-      <| Just (String.toLower input.autocomplete.userInput)
+      Just (String.toLower input.autocomplete.userInput)
   in
     case Maybe.map2 (==) mStop mUserInput of
       (Just True) -> List.head filteredStops
@@ -261,6 +258,6 @@ port computeRoute : ( (String,String) , (String,String) ) -> Cmd msg
 port routes : (List Stop.StopTime -> msg) -> Sub msg
 
 -- Out
-port getStops : () -> Cmd msg
+port init : () -> Cmd msg
 -- In
 port stops : (List Stop.Stop -> msg) -> Sub msg

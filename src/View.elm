@@ -4,14 +4,12 @@ module View exposing (root)
 map User inputs to Operations as defined in Types
 -}
 import Types exposing (..)
---import Autocomplete.View as Autocomplete
 import DebouncedAutocomplete exposing (root)
 import Card exposing (root)
 import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
---import Debug
 
 root : Model -> Html Msg
 root m =

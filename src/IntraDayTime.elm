@@ -1,6 +1,5 @@
 module IntraDayTime exposing (..)
 
-import Debug
 
 type Time =
   Time
@@ -53,17 +52,16 @@ sub (Time time0) (Time time1) =
   let
     ( hr0, min0, sec0 ) =
       case time0 of
-        { hr, min, sec } -> Debug.log "time0" (hr, min, sec)
+        { hr, min, sec } -> (hr, min, sec)
     ( hr1, min1, sec1 ) =
       case time1 of
-        { hr, min, sec } -> Debug.log "time1" (hr, min, sec)
+        { hr, min, sec } -> (hr, min, sec)
 
     base10 =
-      Debug.log "base10"
-        <| (3600*hr0 + 60*min0 + sec0) - (3600*hr1 + 60*min1 + sec1)
-    (hr, n) = Debug.log "hr" (base10 // 3600, base10 `rem` 3600)
-    (min, n') = Debug.log "min" (n // 60, n `rem` 60)
-    sec = Debug.log "sec" n'
+      (3600*hr0 + 60*min0 + sec0) - (3600*hr1 + 60*min1 + sec1)
+    (hr, n) = (base10 // 3600, base10 `rem` 3600)
+    (min, n') = (n // 60, n `rem` 60)
+    sec = n'
   in
     Time
       { hr = hr
