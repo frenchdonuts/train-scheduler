@@ -91,11 +91,8 @@ trainScheduler.ports.computeRoute.subscribe(function(stationIds) {
         .otherwise([[]])
         // :: ()
         .each(route => {
-        if (route.length < 1) {
+            if (route.length < 1) {
                 console.log("No routes!")
-            } else {
-                console.log("We have a route!")
-                console.log(route)
             }
             trainScheduler.ports.routes.send(route)
         })
@@ -111,7 +108,6 @@ function computeRoute(deptStationId, arrvlStationId) {
         .parallel(2)
         // :: Stream [[tripId]]
         .collect()
-        .tap(console.log)
         // :: Stream tripId
         .flatMap(tripIds => __(_(tripIds[0]).intersection(tripIds[1]).toArray()))
         // :: Stream [StopTime]
